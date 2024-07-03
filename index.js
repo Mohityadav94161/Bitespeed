@@ -19,23 +19,6 @@ morgan.token('body', (req) => JSON.stringify(req.body));
 app.use(morgan((tokens, req, res) => {
     const logEntry = `
 [${new Date().toLocaleString()}]
-=== System Information ===
-Hostname: ${os.hostname()}
-OS Type: ${os.type()}
-OS Release: ${os.release()}
-Platform: ${os.platform()}
-Architecture: ${os.arch()}
-System Uptime: ${os.uptime()} seconds
-Total Memory: ${(os.totalmem() / (1024 * 1024)).toFixed(2)} MB
-Free Memory: ${(os.freemem() / (1024 * 1024)).toFixed(2)} MB
-Load Average: ${os.loadavg().join(', ')}
-Endianness: ${os.endianness()}
-
-=== User Information ===
-${JSON.stringify(os.userInfo(), null, 2)}
-
-=== Network Interfaces ===
-${JSON.stringify(os.networkInterfaces(), null, 2)}
 
 === Directory Information ===
 Home Directory: ${os.homedir()}
@@ -243,6 +226,7 @@ app.get('/', (req, res) => {
 //delete the table
 app.post('/deleteTable', async (req, res) => {
     try {
+    
         await Contact.destroy({ where: {} });
         res.status(200).send('Table deleted successfully.');
     } catch (error) {
