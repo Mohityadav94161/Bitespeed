@@ -1,11 +1,27 @@
-## Link for post request
-schema:
+# Contact Identity Service
+
+This service provides endpoints to identify and manage contacts based on email and phone number. It is designed to handle primary and secondary contact associations.
+
+## Endpoints
+
+### Identify Contact
+
+**POST** `/identify`
+
+#### Request Payload
+
+```json
 {
-"email":"",
-"phoneNumber": ""
+    "email": "",
+    "phoneNumber": ""
 }
 
- https://bitespeed-1mqd.onrender.com/identify
-
- i already have tested some test case so you may found ids from around 52 ....</br>
-If you receive **Not Found** wait for few seconds and then try again, as it is hosted on a free server 
+```response example
+{
+    "contact": {
+        "primaryContactId": 1,
+        "emails": ["example@example.com", "example2@example.com"],
+        "phoneNumbers": ["1234567890", "0987654321"],
+        "secondaryContactIds": [2, 3]
+    }
+}

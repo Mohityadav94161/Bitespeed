@@ -2,9 +2,26 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import { sequelize, Contact } from './models/contact.js';
 import { Op } from 'sequelize';
-import Table  from 'cli-table3';
+import morgan from 'morgan';
+import os from 'os'
+
 
 const app = express();
+
+// Logging middleware setup
+app.use(morgan((tokens, req, res) => {
+    return [
+        `[${new Date().toLocaleString()}]`,
+        `[${os.hostname()}]`,
+        `[${req.ip}]`,
+        `[${req.connection.remoteAddress}]`,
+        `[${tokens.method(req, res)}]`,
+        `[${tokens.url(req, res)}]`,
+        `[${tokens.status(req, res)}]`,
+        `[${tokens.res(req, res, 'content-length')}] -`,
+        `[${tokens['response-time'](req, res)}ms]`
+    ].join(' ');
+}));
 
 app.use(bodyParser.json({limit:'50mb'}));
 
@@ -14,7 +31,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 
 app.post('/identify', async (req, res) => {
-    console.log(req.headers)
+    // console.log(req.headers)
     const { email, phoneNumber } = req.body;
 
     if (!email && !phoneNumber) {
