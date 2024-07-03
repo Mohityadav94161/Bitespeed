@@ -2,14 +2,19 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import { sequelize, Contact } from './models/contact.js';
 import { Op } from 'sequelize';
+import Table  from 'cli-table3';
 
 const app = express();
 
 app.use(bodyParser.json({limit:'50mb'}));
 
+//to parse the data
+app.use(bodyParser.urlencoded({ extended: true }));
+
 
 
 app.post('/identify', async (req, res) => {
+    console.log(req.headers)
     const { email, phoneNumber } = req.body;
 
     if (!email && !phoneNumber) {
@@ -126,11 +131,71 @@ app.post('/identify', async (req, res) => {
     }
 });
 
+// print the table
+app.get('/printTable', async (req, res) => {
+    try {
+        const contacts = await Contact.findAll();
+
+        let htmlTable = `
+            <table border="1" cellpadding="5" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Phone Number</th>
+                        <th>Email</th>
+                        <th>Linked ID</th>
+                        <th>Link Precedence</th>
+                        <th>Created At</th>
+                        <th>Updated At</th>
+                        <th>Deleted At</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+
+        contacts.forEach(contact => {
+            htmlTable += `
+                <tr>
+                    <td>${contact.id}</td>
+                    <td>${contact.phoneNumber || ''}</td>
+                    <td>${contact.email || ''}</td>
+                    <td>${contact.linkedId || ''}</td>
+                    <td>${contact.linkPrecedence}</td>
+                    <td>${contact.createdAt}</td>
+                    <td>${contact.updatedAt}</td>
+                    <td>${contact.deletedAt || ''}</td>
+                </tr>
+            `;
+        });
+
+        htmlTable += `
+                </tbody>
+            </table>
+        `;
+
+        res.status(200).send(htmlTable);
+    } catch (error) {
+        console.error('Error fetching contacts:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
 
    
 app.get('/',(req,res)=>{
     res.send('you hit the right server, now make a post request with email or number or both to /identify')
 })
+
+//delete the table
+app.post('/deleteTable', async (req, res) => {
+    try {
+        await Contact.destroy({ where: {} });
+        res.status(200).send('Table deleted successfully.');
+    } catch (error) {
+        console.error('Error deleting table:', error);
+        res.status(500).send({ error: 'Internal Server Error' });
+    }
+});
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
