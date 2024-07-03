@@ -3,27 +3,64 @@ import bodyParser from 'body-parser';
 import { sequelize, Contact } from './models/contact.js';
 import { Op } from 'sequelize';
 import morgan from 'morgan';
-import os from 'os'
+import os from 'os';
+import useragent from 'useragent';
 
 
 const app = express();
 
-// Logging middleware setup
+
+const logs = [];
+
+// Custom token to log user-agent and request body
+morgan.token('user-agent', (req) => useragent.parse(req.headers['user-agent']).toString());
+morgan.token('body', (req) => JSON.stringify(req.body));
+
 app.use(morgan((tokens, req, res) => {
-    return [
-        `[${new Date().toLocaleString()}]`,
-        `[${os.hostname()}]`,
-        `[${req.ip}]`,
-        `[${req.connection.remoteAddress}]`,
-        `[${tokens.method(req, res)}]`,
-        `[${tokens.url(req, res)}]`,
-        `[${tokens.status(req, res)}]`,
-        `[${tokens.res(req, res, 'content-length')}] -`,
-        `[${tokens['response-time'](req, res)}ms]`
-    ].join(' ');
+    const logEntry = `
+[${new Date().toLocaleString()}]
+=== System Information ===
+Hostname: ${os.hostname()}
+OS Type: ${os.type()}
+OS Release: ${os.release()}
+Platform: ${os.platform()}
+Architecture: ${os.arch()}
+System Uptime: ${os.uptime()} seconds
+Total Memory: ${(os.totalmem() / (1024 * 1024)).toFixed(2)} MB
+Free Memory: ${(os.freemem() / (1024 * 1024)).toFixed(2)} MB
+Load Average: ${os.loadavg().join(', ')}
+Endianness: ${os.endianness()}
+
+=== User Information ===
+${JSON.stringify(os.userInfo(), null, 2)}
+
+=== Network Interfaces ===
+${JSON.stringify(os.networkInterfaces(), null, 2)}
+
+=== Directory Information ===
+Home Directory: ${os.homedir()}
+Temporary Directory: ${os.tmpdir()}
+
+
+=== Request Information ===
+IP: ${req.ip}
+Method: ${tokens.method(req, res)}
+URL: ${tokens.url(req, res)}
+Status: ${tokens.status(req, res)}
+Content-Length: ${tokens.res(req, res, 'content-length')}
+Response-Time: ${tokens['response-time'](req, res)} ms
+User-Agent: ${tokens['user-agent'](req)}
+`;
+
+    // Store log entry in the logs array
+    logs.push(logEntry);
+
+    // Return log entry to be output by morgan
+    // return logEntry;
 }));
 
-app.use(bodyParser.json({limit:'50mb'}));
+
+app.use(bodyParser.json({ limit: '50mb' }));
 
 //to parse the data
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -79,7 +116,7 @@ app.post('/identify', async (req, res) => {
         // may be any case where the primary contact is deleted or something else , means it may be the edge case(according to me)
         // If no primary contact found, pick the oldest contact as primary
         if (!primaryContact) {
-            
+
             primaryContact = contacts.sort((a, b) => a.createdAt - b.createdAt)[0];
             primaryContact.linkPrecedence = 'primary';
             await primaryContact.save();
@@ -198,8 +235,8 @@ app.get('/printTable', async (req, res) => {
 });
 
 
-   
-app.get('/',(req,res)=>{
+
+app.get('/', (req, res) => {
     res.send('you hit the right server, now make a post request with email or number or both to /identify')
 })
 
@@ -213,6 +250,14 @@ app.post('/deleteTable', async (req, res) => {
         res.status(500).send({ error: 'Internal Server Error' });
     }
 });
+
+
+// Endpoint to view logs
+app.get('/viewLogs', (req, res) => {
+    res.send('<pre>' + logs.join('\n') + '</pre>');
+});
+
+
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

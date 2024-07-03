@@ -15,7 +15,8 @@
     "morgan": "^1.10.0",
     "node-fetch": "^3.3.2",
     "sequelize": "^6.37.3",
-    "sqlite3": "^5.1.7"
+    "sqlite3": "^5.1.7",
+    "useragent": "^2.3.0"
   },
   "directories": {
     "test": "test"
