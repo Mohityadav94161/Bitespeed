@@ -31,10 +31,11 @@ Start the server: npm start
 
 ### Project Structure
 
-**models/contact.js:** Sequelize model definitions for the Contacts table.
-**index.js:** Main server file containing the endpoint logic.
-**test_data.json:** JSON file containing test data.
+**models/contact.js:** Sequelize model definitions for the Contacts table.</br>
+**index.js:** Main server file containing the endpoint logic.</br>
+**test_data.json:** JSON file containing test data.</br>
 **test.js:** Contains test files for the service.
+
 
 
 
